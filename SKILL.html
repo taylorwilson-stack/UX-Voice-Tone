@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UX Voice and Tone</title>
+<style>
+:root {
+  color-scheme: light;
+
+  --ink: #16181d;
+  --ink-soft: #474d57;
+  --ink-faint: #6c727c;
+  --bg: #ffffff;
+  --tint: #f5f6f8;
+  --tint-strong: #ebeef1;
+  --rule: #e3e5e9;
+  --rule-mid: #c7ccd3;
+  --accent: #0f4c81;
+
+  /* Reading measure: ~75ch on narrow screens, ~105ch on desktop. Grows continuously. */
+  --measure: clamp(37rem, 50vw + 10rem, 60rem);
+  --rail: clamp(13rem, 17vw, 17rem);
+  --gutter: clamp(1.125rem, 4vw, 3rem);
+  --break: 56.25rem; /* 900px — documented only; media queries repeat the value */
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 100%;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(1.0625rem, 1.02rem + 0.18vw, 1.1875rem);
+  line-height: 1.65;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- Skip link ---------- */
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+.skip:focus {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 20;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  padding: 0.5rem 0.8rem;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+/* ---------- Shell ---------- */
+
+.shell {
+  max-width: 100rem;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.docmeta {
+  border-bottom: 1px solid var(--rule);
+  padding-block: clamp(1.75rem, 4vw, 3rem) clamp(1rem, 2.5vw, 1.5rem);
+}
+.docmeta h1 { margin: 0 0 0.5rem; }
+.docmeta .lead {
+  max-width: var(--measure);
+  margin: 0 0 1rem;
+  color: var(--ink-soft);
+  font-size: 0.95em;
+}
+.docmeta dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 1.5rem;
+  margin: 0;
+  font-size: 0.8em;
+  color: var(--ink-faint);
+  line-height: 1.5;
+}
+.docmeta dt {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.82em;
+  margin: 0;
+}
+.docmeta dd { margin: 0; }
+.docmeta .file {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.95em;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  padding-bottom: clamp(3rem, 8vw, 6rem);
+}
+@media (min-width: 56.25rem) {
+  .layout {
+    grid-template-columns: var(--rail) minmax(0, 1fr);
+    column-gap: clamp(2rem, 4vw, 4.5rem);
+  }
+}
+
+/* Content column: fills small screens, grows to the desktop measure. Centered while
+   single-column; left-aligned against the rail once the rail appears. */
+.content {
+  width: 100%;
+  max-width: var(--measure);
+  min-width: 0;
+  margin-inline: auto;
+  padding-top: clamp(1.5rem, 4vw, 2.5rem);
+}
+@media (min-width: 56.25rem) {
+  .content { margin-inline: 0; }
+}
+
+/* ---------- Table of contents ---------- */
+
+.toc {
+  margin-block: 1.5rem 0.5rem;
+  border: 1px solid var(--rule);
+  background: var(--tint);
+}
+.toc > summary {
+  cursor: pointer;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.toc > summary::marker { color: var(--ink-faint); }
+.toc-body { padding: 0.25rem 0.85rem 0.85rem; }
+.toc-label { display: none; }
+
+.toc nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.toc nav li { margin: 0; }
+.toc nav ul ul { padding-left: 0.8rem; }
+.toc a {
+  display: block;
+  padding: 0.3rem 0 0.3rem 0.7rem;
+  border-left: 2px solid var(--rule-mid);
+  font-size: 0.87em;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+.toc nav ul ul a { font-size: 0.82em; color: var(--ink-faint); }
+.toc a:hover { color: var(--ink); border-left-color: var(--ink-faint); }
+.toc a[aria-current="true"] {
+  color: var(--accent);
+  font-weight: 700;
+  border-left-color: var(--accent);
+}
+
+@media (min-width: 56.25rem) {
+  .toc {
+    position: sticky;
+    top: 0;
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    margin: 0;
+    border: 0;
+    border-right: 1px solid var(--rule);
+    background: transparent;
+    padding: clamp(1.5rem, 4vw, 2.5rem) 1rem 2rem 0;
+  }
+  .toc > summary { display: none; }
+  /* The rail is always open on desktop, whatever the details state is. */
+  .toc:not([open]) > .toc-body { display: block; }
+  .toc::details-content { content-visibility: visible; block-size: auto; }
+  .toc-body { padding: 0; }
+  .toc-label {
+    display: block;
+    font-size: 0.72em;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 0.6rem 0.7rem;
+  }
+}
+
+/* ---------- Typography ---------- */
+
+h1, h2, h3, h4 {
+  color: var(--ink);
+  line-height: 1.2;
+  text-wrap: balance;
+  scroll-margin-top: 1rem;
+}
+h1 {
+  font-size: clamp(1.85rem, 1.45rem + 1.7vw, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -0.021em;
+  line-height: 1.14;
+}
+h2 {
+  font-size: clamp(1.4rem, 1.2rem + 0.85vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: -0.013em;
+  margin: clamp(2.75rem, 5.5vw, 4rem) 0 0.75rem;
+  padding-top: clamp(1.25rem, 2.5vw, 1.75rem);
+  border-top: 1px solid var(--rule);
+}
+h3 {
+  font-size: clamp(1.08rem, 1.02rem + 0.3vw, 1.26rem);
+  font-weight: 600;
+  margin: clamp(1.9rem, 3.5vw, 2.6rem) 0 0.5rem;
+}
+h4 {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 1.6rem 0 0.4rem;
+}
+
+p, ul, ol { margin: 0 0 1.05em; }
+li { margin-bottom: 0.3em; }
+li > ul, li > ol { margin-top: 0.3em; margin-bottom: 0.3em; }
+ul, ol { padding-left: 1.4em; }
+
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+a:hover { text-decoration-thickness: 2px; }
+
+a:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+strong { font-weight: 650; }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 2.5rem 0; }
+
+/* ---------- Blockquote ---------- */
+
+blockquote {
+  margin: 1.6rem 0;
+  padding: 0.15rem 0 0.15rem 1.15rem;
+  border-left: 3px solid var(--rule-mid);
+  color: var(--ink-soft);
+}
+blockquote p:last-child { margin-bottom: 0; }
+
+/* ---------- Code ---------- */
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+:not(pre) > code {
+  background: var(--tint-strong);
+  padding: 0.1em 0.34em;
+  border-radius: 2px;
+  font-size: 0.88em;
+  overflow-wrap: anywhere;
+}
+pre {
+  margin: 1.6rem 0;
+  padding: 0.9rem 1rem;
+  background: var(--tint);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--rule-mid);
+  font-size: 0.86em;
+  line-height: 1.55;
+  tab-size: 2;
+  /* Wrap rather than clip; the page never scrolls sideways. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+
+/* ---------- Tables ---------- */
+
+.table-wrap {
+  margin: 1.6rem 0;
+  border: 1px solid var(--rule);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 30rem; /* forces the wrapper to scroll, not the page */
+  font-size: 0.92em;
+}
+table.matrix { min-width: 48rem; }
+caption {
+  caption-side: top;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.82em;
+  color: var(--ink-faint);
+}
+th, td {
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--rule);
+}
+thead th {
+  background: var(--tint-strong);
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--rule-mid);
+  white-space: nowrap;
+}
+tbody tr:nth-child(even) { background: var(--tint); }
+tbody tr:last-child td { border-bottom: 0; }
+
+/* ---------- Review callouts ---------- */
+
+.callout {
+  margin: 1.6rem 0;
+  padding: 0.85rem 1rem;
+  background: var(--tint);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+}
+.callout > .label {
+  display: block;
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 0.3em;
+}
+.callout p:last-child { margin-bottom: 0; }
+/* Rule style distinguishes the kind without relying on hue. */
+.callout--question { border-left-style: dashed; }
+.callout--decision { border-left-color: var(--ink); }
+
+/* ---------- Example pairs ---------- */
+
+.example {
+  margin: 1.5rem 0;
+  padding: 0.1rem 0 0.1rem 1.1rem;
+  border-left: 2px solid var(--rule-mid);
+}
+.example > .example-label {
+  margin: 0 0 0.45em;
+  font-weight: 700;
+}
+.example > .ex-line { margin: 0 0 0.4em; }
+.example > .ex-note {
+  margin: 0.55em 0 0;
+  font-size: 0.93em;
+  color: var(--ink-soft);
+}
+.ex-tag {
+  font-weight: 650;
+  font-size: 0.8em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-right: 0.15em;
+}
+
+img, svg, video, iframe { max-width: 100%; height: auto; }
+
+/* ---------- Print ---------- */
+
+@media print {
+  :root { --tint: #fff; --tint-strong: #fff; }
+  .skip, .toc { display: none !important; }
+  .shell { max-width: none; padding: 0; }
+  .layout { display: block; padding-bottom: 0; }
+  .content { max-width: none; padding-top: 0; }
+  body { font-size: 11pt; line-height: 1.45; color: #000; background: #fff; }
+  a { color: #000; }
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+  }
+  h1, h2, h3, h4 { break-after: avoid; page-break-after: avoid; }
+  h2 { border-top: 0; padding-top: 0; margin-top: 1.6rem; }
+  p, li, blockquote { orphans: 3; widows: 3; }
+  pre, table, blockquote, .callout, .table-wrap, .example { break-inside: avoid; }
+  .table-wrap { overflow: visible; }
+  table, table.matrix { min-width: 0; }
+  thead { display: table-header-group; }
+}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="shell">
+
+  <header class="docmeta">
+    <h1>UX Voice and Tone</h1>
+    <p class="lead">Rula's voice and tone system, plus the applied craft of writing and
+    critiquing product copy across iOS, Android, and web. Covers content strategy framing,
+    constant voice attributes, tone shifts by scenario and emotional state, non-negotiable
+    constraints, clinical guardrails, mechanics, canonical terminology, vocabulary, and
+    accessibility. Use when
+    drafting new copy (buttons, labels, fields, errors, empty states, toasts, banners,
+    onboarding, tooltips, dense modules, multi-screen narrative), reviewing or choosing
+    between existing strings, framing how a feature should be interpreted, or answering
+    questions about how Rula should sound.</p>
+    <dl>
+      <dt>Source</dt>
+      <dd class="file">SKILL.md</dd>
+      <dt>Skill</dt>
+      <dd class="file">ux-voice-and-tone</dd>
+      <dt>Generated</dt>
+      <dd>1 October 2026</dd>
+    </dl>
+  </header>
+
+  <div class="layout">
+
+    <details class="toc" id="toc" open>
+      <summary>Contents</summary>
+      <div class="toc-body">
+        <p class="toc-label">Contents</p>
+        <nav aria-label="Table of contents">
+          <ul>
+            <li><a href="#when-to-use">When to use</a></li>
+            <li>
+              <a href="#scope">Scope</a>
+              <ul>
+                <li><a href="#content-strategy">Content strategy</a></li>
+                <li><a href="#product-copy">Product copy</a></li>
+                <li><a href="#cross-platform">Cross-platform</a></li>
+                <li><a href="#audiences">Audiences</a></li>
+              </ul>
+            </li>
+            <li><a href="#voice-constant-tone-variable">Voice is constant, tone is variable</a></li>
+            <li><a href="#clear-eyed-catalyst">The Clear-Eyed Catalyst</a></li>
+            <li><a href="#non-negotiables">Non-negotiables</a></li>
+            <li><a href="#referring-to-ai-features">Referring to AI features</a></li>
+            <li>
+              <a href="#our-character">Our character</a>
+              <ul>
+                <li><a href="#observant">Observant</a></li>
+                <li><a href="#calm">Calm</a></li>
+                <li><a href="#honest">Honest</a></li>
+                <li><a href="#thorough">Thorough</a></li>
+                <li><a href="#brave">Brave</a></li>
+              </ul>
+            </li>
+            <li><a href="#voice-tension-framework">Voice tension framework</a></li>
+            <li><a href="#brand-voice-in-product">Brand voice in product</a></li>
+            <li><a href="#brand-principles">Brand principles</a></li>
+            <li><a href="#context-empathy-mechanism">Context is the empathy mechanism</a></li>
+            <li><a href="#tone-matrix">Tone matrix</a></li>
+            <li><a href="#identity-personification">Identity and personification</a></li>
+            <li><a href="#alliance">Alliance</a></li>
+            <li><a href="#ai-design-principles">Rula's AI design principles</a></li>
+            <li><a href="#clinical-guardrails">Clinical guardrails</a></li>
+            <li>
+              <a href="#mechanics">Mechanics</a>
+              <ul>
+                <li><a href="#punctuation-capitalization">Punctuation and capitalization</a></li>
+                <li><a href="#grammar-person">Grammar and person</a></li>
+                <li><a href="#by-component">By component</a></li>
+              </ul>
+            </li>
+            <li><a href="#terminology">Terminology</a></li>
+            <li><a href="#vocabulary-inclusion-accessibility">Vocabulary, inclusion, and accessibility</a></li>
+            <li><a href="#writing-mode">Writing mode</a></li>
+            <li><a href="#critique-mode">Critique mode</a></li>
+            <li><a href="#examples">Examples</a></li>
+            <li><a href="#sources">Sources</a></li>
+            <li><a href="#open-questions">Open questions</a></li>
+          </ul>
+        </nav>
+      </div>
+    </details>
+
+    <main class="content" id="main">
+
+      <p>Rula's voice and tone system and the craft of applying it.</p>
+
+      <h2 id="when-to-use">When to use</h2>
+
+      <p>Two modes:</p>
+
+      <ul>
+        <li><strong>Write</strong>: produce new copy. The default.</li>
+        <li><strong>Critique</strong>: evaluate existing copy and explain the reasoning.
+        Switch to this when the user pastes strings, shares a screen, or asks "is this good"
+        or "which is better."</li>
+      </ul>
+
+      <p>Also use it to answer questions about how Rula should sound, settle a disagreement
+      between two drafts, or check whether an existing surface is on-voice.</p>
+
+      <p>For copy outside this scope (marketing, email, social, presentations, internal
+      messages), Brand maintains the Rula Brand Voice Gem. This skill is its in-product
+      counterpart. The two should agree on voice and differ only in surface.</p>
+
+      <h2 id="scope">Scope</h2>
+
+      <h3 id="content-strategy">Content strategy</h3>
+
+      <p>Provide framing directions for how the product, or a specific feature, should be
+      interpreted. This is the layer above individual strings: what the thing is to the person
+      using it, and which reading the copy is steering them toward. Brand's voice definition is
+      the starting point for any framing work: see
+      <a href="#clear-eyed-catalyst">The Clear-Eyed Catalyst</a>.</p>
+
+      <h3 id="product-copy">Product copy</h3>
+
+      <ul>
+        <li>Product content: multi-screen narratives, single-screen views, dense modules, and
+        banners.</li>
+        <li>Microcopy: buttons, labels, fields, errors, empty states, and toasts.</li>
+        <li>Not explicitly for marketing, transactional emails, push notifications, or the
+        conversational AI's response behavior and system design.</li>
+      </ul>
+
+      <p><strong>This skill does not define how the agent responds.</strong> Voice and tone
+      apply to every word a patient reads, including Thread's responses. But what the agent says,
+      when it says it, and how it decides are out of scope here: that is response behavior, and it
+      lives elsewhere. Behavior is specified in the CxD Spec for the ITMS Agent, and the agent
+      runbook lives in Braintrust (see <a href="#sources">Sources</a>). The voice those replies
+      are written in is governed here, and nothing more.</p>
+
+      <h3 id="cross-platform">Cross-platform</h3>
+
+      <p>The voice is identical on iOS, Android, and web, and tone doesn't change by platform
+      either: it changes by the reader's situation. What changes is the container, so read the
+      platform context before drafting.</p>
+
+      <ul>
+        <li>Native mobile: tighter character budgets, system-standard controls, and sheet and
+        alert patterns that carry their own button conventions.</li>
+        <li>Web: more room and denser layouts, so the temptation is to over-explain. The
+        cut-a-third rule still applies.</li>
+        <li>Provider tools: desktop-first and information-dense. Speed over warmth.</li>
+      </ul>
+
+      <p><strong>A consistent message across platforms is crucial, and deviation should be
+      rare.</strong> Platform context can make a message <strong>reductive</strong> (the same
+      message, carrying less) or <strong>additive</strong> (the same message, with room for
+      more), but never different in its core message. If a platform appears to need a
+      different message, the message is the thing to fix, not the platform.</p>
+
+      <p>Write each string for the component it actually lands in. When the same string ships
+      to more than one platform, write to the tightest constraint. If the platform isn't
+      stated and the string is length-sensitive, ask.</p>
+
+      <h3 id="audiences">Audiences</h3>
+
+      <p>Patients and providers. Ask which if it isn't obvious. Most of the guidance below is
+      patient-side; for provider surfaces see the note at the end of Mechanics.</p>
+
+      <h2 id="voice-constant-tone-variable">Voice is constant, tone is variable</h2>
+
+      <p>Two different things, and conflating them is the most common reason copy goes
+      wrong.</p>
+
+      <p><strong>Voice</strong> is Rula's personality. It does not change. A billing error and
+      a moment of distress are written by the same writer with the same values.</p>
+
+      <p><strong>Tone</strong> is how that voice adjusts to the reader's situation: their
+      emotional state, the consequence of the screen, and how much they already know. Tone
+      shifts; voice doesn't.</p>
+
+      <p>Practically: if copy feels off, diagnose which layer broke. Cheerleading on a success
+      screen is a <strong>voice</strong> failure (Rula doesn't cheerlead anywhere). Warmth and
+      reflection on a billing error is a <strong>tone</strong> failure (right voice, wrong
+      setting). The fixes are different.</p>
+
+      <h2 id="clear-eyed-catalyst">The Clear-Eyed Catalyst</h2>
+
+      <p>Brand's definition of Rula's voice. It is the framing layer above any individual
+      string.</p>
+
+      <p>Rula's voice is built on a belief: people don't just get stuck because mental
+      healthcare is hard, they get stuck because they have to navigate a complex mental
+      healthcare system that makes progress feel harder than it should. So the voice doesn't
+      just reassure. It helps people see clearly.</p>
+
+      <p>In one line: <strong>the Clear-Eyed Catalyst interrupts what's getting in the way
+      across people, practices, and systems, so the path forward becomes clear enough to act
+      on.</strong></p>
+
+      <p>Whether the audience is patients, providers, or payers, the role is the same:</p>
+
+      <ul>
+        <li>Names patterns others ignore, normalize, or work around.</li>
+        <li>Challenges systems that create friction, confusion, or inefficiency.</li>
+        <li>Replaces assumption with clarity.</li>
+        <li>Pushes past "good enough" when it stands in the way of better outcomes.</li>
+        <li>Moves people and systems from hesitation to meaningful progress.</li>
+      </ul>
+
+      <p>Brand specifies the voice as a blend: <strong>40%</strong> the friend who cuts through
+      the noise and calls out what's not working, <strong>30%</strong> the therapist who helps
+      you see what you've been telling yourself, <strong>30%</strong> the experienced nurse who
+      shows exactly what comes next.</p>
+
+      <div class="callout callout--decision">
+        <span class="label">How to read the blend</span>
+        <p><strong>Read the blend as the writer's posture, not as a persona the product
+        claims.</strong> It describes where the writing stands, not a relationship a surface
+        offers the person using it. Copy that reads like a friend cutting through noise is
+        on-voice. A surface that tells a patient it <em>is</em> their friend breaks a
+        non-negotiable. See <a href="#identity-personification">Identity and
+        personification</a>.</p>
+      </div>
+
+      <h2 id="non-negotiables">Non-negotiables</h2>
+
+      <p>These hold across every surface, every platform, and every tone setting. They are
+      constraints, not preferences.</p>
+
+      <ul>
+        <li><strong>Rula extends care, it doesn't perform it.</strong> No surface may position
+        itself as therapy, a clinician, or a substitute for care. Copy must never imply a
+        product substitutes for a session, holds a relationship with the patient, or provides
+        care itself.</li>
+        <li><strong>AI features are a space to reflect</strong>, never a companion and never a
+        source of support.</li>
+        <li><strong>A boundary line appears wherever an AI feature is introduced</strong>:
+        "[Feature] is AI, not a clinician." Thread ships "Thread is AI, not a clinician," and that
+        short form is approved. Never ship an AI feature introduction without it, and don't invent
+        variants. The Intersession Support Messaging Guide still lists a longer disclosure, "Thread
+        is AI, it is not a clinician. It does not replace your therapist." That version predates
+        the approval of the short form, so the guide is out of date on this point: the longer
+        string stays permissible but is not required, and the non-negotiable carries no
+        scope-of-care clause. Worth getting the guide corrected so the next writer doesn't read it
+        as current.</li>
+        <li><strong>Sharing is per-feature, and the two defaults are opposite.</strong> Thread
+        conversations are <strong>private from the provider</strong>: encrypted, not visible to
+        the therapist, unless a safety risk is identified. Never imply a therapist is involved
+        in a Thread conversation or can read it. <strong>Session topics are the reverse</strong>:
+        shared with the therapist by default unless the patient changes the setting, and copy
+        must never imply they aren't. Check which feature you're writing for before describing
+        sharing at all. Never convey that everything entered into Thread is completely private,
+        either: the safety exception is real, and privacy language is pre-approved and requires
+        review to change.</li>
+        <li><strong>Don't explain the how without the why.</strong> A screen that only covers
+        mechanics is a missed screen.</li>
+        <li><strong>Frame features as building on the work you do in therapy</strong>, or as
+        reinforcing the provider's recommendations. The object matters: "building on the work you
+        do in therapy" is right, "building on therapy" is not. Never use extension, replacement,
+        or substitute framing.</li>
+      </ul>
+
+      <h2 id="referring-to-ai-features">Referring to AI features</h2>
+
+      <p>How to name and describe Rula's AI features. From the Intersession Support Messaging
+      Guide, and these apply on every surface that mentions one.</p>
+
+      <p><strong>What to call it.</strong> Always "a conversational AI tool" or "an AI-powered
+      conversational tool." Branded names are capitalized: Thread.</p>
+
+      <p><strong>Never call it:</strong></p>
+
+      <ul>
+        <li>A chatbot, a companion, or an AI persona.</li>
+        <li>A human being, a clinician, a provider, or a therapist.</li>
+        <li>"AI therapy," treatment, a mental health service, a therapy service, a behavioral
+        health service, or a clinical tool.</li>
+        <li>A crisis resource. Frame availability as any time, day or night, and stop there.</li>
+        <li>A pilot, in patient-facing copy. Alpha V2 is "early access."</li>
+      </ul>
+
+      <p><strong>Never imply:</strong></p>
+
+      <ul>
+        <li>That it provides professional mental or behavioral health services, makes a diagnosis,
+        decides treatment, makes therapeutic recommendations, or produces an outcome.</li>
+        <li>A relationship with the patient. No "always here for you," no "your new friend."</li>
+        <li>Emotional support. "Thread can support you through difficult scenarios" is out.</li>
+        <li>Future functionality. No "always," "never," or "we will" about AI plans.</li>
+      </ul>
+
+      <p><strong>Prepositions matter.</strong> Conversations happen <strong>in</strong> Thread, or
+      the patient is <strong>using</strong> Thread. Never "with Thread," which turns it into a
+      conversational partner.</p>
+
+      <p><strong>It offers a space.</strong> "A space" is the preferred framing and "a tool" is
+      acceptable: a space to navigate a moment or to reflect. It does not help anyone "work
+      through" something, which implies therapeutic work.</p>
+
+      <h2 id="our-character">Our character</h2>
+
+      <p>Brand's five character attributes: how the voice shows up across all audiences.
+      Definitions and "how this shows up" bullets are Brand's. A product note follows only
+      where in-product application differs from the brand register.</p>
+
+      <h3 id="observant">Observant</h3>
+
+      <p>We don't just notice what's happening, we notice why it's happening. We surface the
+      patterns people and systems fall into, especially the ones that quietly prevent
+      progress.</p>
+
+      <p>How this shows up:</p>
+
+      <ul>
+        <li>We name internal talk tracks, operational workarounds, and system blind spots.</li>
+        <li>We point out contradictions between intention and behavior.</li>
+        <li>We reflect reality without overstepping or assuming.</li>
+        <li>We help people feel seen without speaking for them.</li>
+      </ul>
+
+      <p><strong>In product.</strong> This is the attribute the context mechanism serves.
+      "Without overstepping or assuming" is also the clinical line: describe what was observed
+      or recorded, never what it means.</p>
+
+      <h3 id="calm">Calm</h3>
+
+      <p>We are steady and controlled, but never passive. Our calm creates clarity and forward
+      motion, especially in complex or high-stakes moments. We don't soften the message to the
+      point of inaction or avoidance, but we also don't overwhelm with urgency.</p>
+
+      <p>How this shows up:</p>
+
+      <ul>
+        <li>We reduce noise without reducing truth.</li>
+        <li>We bring structure to complexity.</li>
+        <li>We keep momentum without pressure or hype.</li>
+        <li>We make the next step feel manageable and real.</li>
+      </ul>
+
+      <h3 id="honest">Honest</h3>
+
+      <p>We say what's actually going on, whether it's about emotions, operations, or outcomes.
+      We avoid both sugarcoating and abstraction.</p>
+
+      <p>How this shows up:</p>
+
+      <ul>
+        <li>We say the thing others soften, generalize, or avoid.</li>
+        <li>We avoid platitudes, vague reassurance, and empty positivity.</li>
+        <li>We acknowledge tradeoffs, effort, and constraints when they exist.</li>
+        <li>We focus on what actually helps, not what sounds good.</li>
+      </ul>
+
+      <p><strong>In product.</strong> "Vague reassurance and empty positivity" names the same
+      failure as the context mechanism. Generic sympathy is a voice failure, not just a missed
+      opportunity.</p>
+
+      <h3 id="thorough">Thorough</h3>
+
+      <p>We don't settle for surface-level understanding. We go deep enough to be useful then
+      translate that into clear, usable guidance. We simplify without losing what's
+      important.</p>
+
+      <p>How this shows up:</p>
+
+      <ul>
+        <li>We connect actions to outcomes so people understand why something matters.</li>
+        <li>We ensure decisions and recommendations are grounded in clinical rigor and real
+        data.</li>
+        <li>We simplify complexity without losing what matters.</li>
+        <li>We focus on what's relevant instead of saying everything.</li>
+      </ul>
+
+      <p><strong>In product.</strong> Thorough describes the thinking, not the word count. In
+      microcopy it usually means cutting, because "what's relevant instead of saying
+      everything" is the operative clause.</p>
+
+      <h3 id="brave">Brave</h3>
+
+      <p>We challenge patterns, assumptions, and norms that get in the way of better outcomes
+      across individuals, practices, and systems.</p>
+
+      <p>How this shows up:</p>
+
+      <ul>
+        <li>We call out avoidance, overthinking, and unhelpful patterns without judgment.</li>
+        <li>We challenge broken industry norms and expectations.</li>
+        <li>We use tension, contrast, or light irreverence to reveal truth.</li>
+        <li>We say what others soften or sidestep without becoming harsh or dismissive.</li>
+      </ul>
+
+      <p><strong>In product.</strong> This is the attribute that attenuates most. See
+      <a href="#brand-voice-in-product">Brand voice in product</a> below.</p>
+
+      <h2 id="voice-tension-framework">Voice tension framework</h2>
+
+      <p>Brand's framing: the voice lives in a constant state of balance. It's not just what we
+      are, but also what we're not. That balance keeps communication approachable, on-brand,
+      and consistent across touchpoints.</p>
+
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Voice tension framework">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Rula does</th>
+              <th scope="col">Rula does not</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Name real patterns and behaviors</th>
+              <td>Stay vague or generalized</td>
+            </tr>
+            <tr>
+              <th scope="row">Challenge friction and inefficiency</th>
+              <td>Accept or normalize broken systems</td>
+            </tr>
+            <tr>
+              <th scope="row">Speak with calm conviction</th>
+              <td>Sound passive or overly softened</td>
+            </tr>
+            <tr>
+              <th scope="row">Replace assumptions with clarity</th>
+              <td>Default to reassurance without insight</td>
+            </tr>
+            <tr>
+              <th scope="row">Use tension to reveal truth</th>
+              <td>Sound scripted or overly polished</td>
+            </tr>
+            <tr>
+              <th scope="row">Focus on what actually moves things forward</th>
+              <td>Overwhelm with information or abstraction</td>
+            </tr>
+            <tr>
+              <th scope="row">Respect the audience's reality</th>
+              <td>Talk down, judge, or oversimplify</td>
+            </tr>
+            <tr>
+              <th scope="row">Create momentum</th>
+              <td>Let people or systems stay stuck</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout--question">
+        <span class="label">Pairing is inferred</span>
+        <p>The brand guidelines present these as two columns rather than as stated pairs. The
+        rows above pair them by their order in the source, which reads cleanly but is inferred.
+        If a pairing ever seems forced, treat the two columns as independently true.</p>
+      </div>
+
+      <h2 id="brand-voice-in-product">Brand voice in product</h2>
+
+      <p>The brand voice was written for the whole company: marketing, sales, payer
+      conversations, internal communication. In-product copy is the same voice at a different
+      strength, because the reader's situation is different. Someone reading a payer deck is
+      evaluating Rula. Someone reading an in-product string is often mid-task, mid-decision, or
+      mid-difficulty.</p>
+
+      <p><strong>Observant</strong>, <strong>Calm</strong>, <strong>Honest</strong>, and
+      <strong>Thorough</strong> hold at full strength everywhere. Nothing about a product
+      surface makes them less true.</p>
+
+      <p><strong>Brave attenuates as distress and consequence rise.</strong> The attribute
+      holds, which is why Rula still says the thing others soften, but its expression narrows.
+      Brand lists four Brave behaviors and they don't travel equally into a product:</p>
+
+      <ul>
+        <li><strong>Call out avoidance, overthinking, and unhelpful patterns without
+        judgment.</strong> Available everywhere, with the caution below.</li>
+        <li><strong>Say what others soften or sidestep, without becoming harsh or
+        dismissive.</strong> Available everywhere. This is what stops a boundary from being
+        softened to seem warmer.</li>
+        <li><strong>Challenge broken industry norms and expectations.</strong> Brand and
+        marketing register. A patient mid-task doesn't need Rula's critique of the industry, and
+        an error screen is not the place for it.</li>
+        <li><strong>Use tension, contrast, or light irreverence to reveal truth.</strong>
+        Contrast is usable on onboarding and other low-distress surfaces. Irreverence is not
+        usable in product at all.</li>
+      </ul>
+
+      <div class="callout callout--decision">
+        <span class="label">The caution on the first behavior</span>
+        <p>It can be executed in a way that is technically on-brand and clinically wrong. "You
+        keep circling the same thing. What are you actually avoiding?" is that behavior taken
+        literally, and it reads as accusatory to someone who is flooded. "Without judgment" is
+        carrying the weight there. At high distress, describe the pattern and stop: "You've
+        mentioned pressure building for several days now. What feels most difficult to untangle
+        first?"</p>
+      </div>
+
+      <p>This attenuation is a product rule and it is in force. It is also a product judgment:
+      Brand's guidelines do not qualify Brave by surface or by the reader's state, so say so
+      when it drives a decision, and raise it if Brand revisits the chapter.</p>
+
+      <p>Order of authority when these conflict:</p>
+
+      <ol>
+        <li><strong>Clinical guardrails.</strong> They outrank brand voice on any clinical
+        surface, without exception.</li>
+        <li><strong>Non-negotiables.</strong> Positioning constraints hold at every tone
+        setting.</li>
+        <li><strong>Brand voice.</strong> The five attributes and the tension framework.</li>
+        <li><strong>Brand principles and mechanics.</strong> Product-specific refinements
+        within the brand voice.</li>
+      </ol>
+
+      <p>A string that is perfectly on brand voice and breaks a clinical guardrail is not
+      shippable. A string that satisfies the guardrails and sounds like any other health app is
+      a smaller failure, but still a failure.</p>
+
+      <h2 id="brand-principles">Brand principles</h2>
+
+      <p>Product-specific refinements that apply within the brand voice. Where one of these
+      appears to conflict with the brand guidelines, the brand guidelines win, and the conflict
+      is worth raising rather than resolving silently.</p>
+
+      <ol>
+        <li><strong>Clarity over charisma.</strong> The goal is helping people understand
+        themselves, not comforting them or being likeable.</li>
+        <li><strong>Continuity over companionship.</strong> Connect this moment to their
+        ongoing work; don't build a relationship with the product.</li>
+        <li><strong>Context over generic empathy.</strong> See the next section. This is the
+        differentiator.</li>
+        <li><strong>Reflection over reaction.</strong> Observe and open rather than responding
+        emotionally.</li>
+        <li><strong>Therapeutic alignment over AI personality.</strong> Serve the therapy
+        work, not the product's character.</li>
+        <li><strong>Gentle momentum over passive calm.</strong> Move the person gently
+        forward. Soothing without direction is a failure mode.</li>
+        <li><strong>Emotionally intelligent without pretending to be human.</strong>
+        Attunement without simulation.</li>
+      </ol>
+
+      <h2 id="context-empathy-mechanism">Context is the empathy mechanism</h2>
+
+      <div class="callout callout--decision">
+        <span class="label">Most important rule</span>
+        <p><strong>The most important rule in this skill.</strong> Emotional resonance should
+        come from contextual understanding, not from intensified empathy language. Rula can be
+        more confident and insightful than other AI products precisely because it understands
+        the therapeutic context over time. Spending that advantage on generic sympathy wastes
+        it.</p>
+      </div>
+
+      <p>Generic, and wrong:</p>
+
+      <ul>
+        <li>"That sounds really difficult."</li>
+        <li>"Sorry to hear that it's been tough lately."</li>
+      </ul>
+
+      <p>Strong, and right:</p>
+
+      <ul>
+        <li>"In past sessions, you've wanted to try and notice overwhelm earlier, before it
+        turns into shutdown. Does this feel connected to that?"</li>
+        <li>"You've been trying to set stronger boundaries lately, but it seems hardest when
+        you feel responsible for keeping everyone calm."</li>
+      </ul>
+
+      <p>The pattern: anchor to something specific and real from the patient's actual
+      therapeutic work, then offer the connection rather than asserting it. When there is no
+      real context to draw on, say less. Don't fill the gap with sympathy volume.</p>
+
+      <p>Use context implicitly and naturally. Reference it because it helps this moment,
+      never to demonstrate that the system remembers. Don't force a connection that isn't
+      clearly there.</p>
+
+      <h2 id="tone-matrix">Tone matrix</h2>
+
+      <p>The voice attributes stay on. These are the dials that move. Find the row that
+      matches the moment before drafting.</p>
+
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Tone matrix">
+        <table class="matrix">
+          <thead>
+            <tr>
+              <th scope="col">Scenario</th>
+              <th scope="col">Reader's likely state</th>
+              <th scope="col">Tone setting</th>
+              <th scope="col">Guidance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Onboarding and first introduction</th>
+              <td>Curious, slightly skeptical, scanning</td>
+              <td>Plain, concrete, confident</td>
+              <td>Lead with the why, one idea per screen. Boundary line required wherever the
+              AI tool is introduced. No hype adjectives.</td>
+            </tr>
+            <tr>
+              <th scope="row">Routine reflection between sessions</th>
+              <td>Focused, mid-thought</td>
+              <td>Observational, anchored, spare</td>
+              <td>Anchor to real context. One question. Shorter than feels natural.</td>
+            </tr>
+            <tr>
+              <th scope="row">Heightened distress</th>
+              <td>Overwhelmed, flooded</td>
+              <td>Slower, shorter, more direct</td>
+              <td>Less interpretation, not more warmth. Drop techniques and framing devices.
+              Resist the urge to say more.</td>
+            </tr>
+            <tr>
+              <th scope="row">Near-risk or crisis-adjacent</th>
+              <td>Frightened, at the edge</td>
+              <td>Direct, dignified, unsoftened</td>
+              <td>State the boundary plainly and route to 911 for an emergency or 988 for
+              crisis support (call or text). No alarm, no euphemism, and never soften the
+              boundary to seem warmer.</td>
+            </tr>
+            <tr>
+              <th scope="row">Session preparation and handoff</th>
+              <td>Purposeful, preparing</td>
+              <td>Factual, forward-looking</td>
+              <td>Keep the care central and the product out of the way. Say what the provider
+              will see and when.</td>
+            </tr>
+            <tr>
+              <th scope="row">Progress or milestone</th>
+              <td>Satisfied, encouraged</td>
+              <td>Understated, specific</td>
+              <td>Name what actually happened. No celebration, no streaks, no "keep it
+              going."</td>
+            </tr>
+            <tr>
+              <th scope="row">Error or failure</th>
+              <td>Frustrated, blocked</td>
+              <td>Calm, plain, immediately useful</td>
+              <td>What happened, then the next action. No emotional framing. Apologize only
+              when Rula is at fault, once.</td>
+            </tr>
+            <tr>
+              <th scope="row">Empty state</th>
+              <td>Orienting, mildly uncertain</td>
+              <td>Concrete, brief</td>
+              <td>What will appear here and how it gets there. One sentence.</td>
+            </tr>
+            <tr>
+              <th scope="row">Provider surfaces</th>
+              <td>Time-pressed, task-focused</td>
+              <td>Fast, specific, explicit about review</td>
+              <td>Drop the reflective posture entirely. Say what still needs their review.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Two reliable instincts: <strong>as distress rises, length falls</strong>, and
+      <strong>as consequence rises, disclosure rises</strong>.</p>
+
+      <h2 id="identity-personification">Identity and personification</h2>
+
+      <p>Yes: warm, grounded, emotionally steady, reflective, thoughtful, collaborative, clear
+      behavioral and topical boundaries.</p>
+
+      <p>No: fictional backstory, simulated emotional life, strong opinions or preferences,
+      overly human self-expression.</p>
+
+      <p>Rula's products are non-personified. No surface is a character identity, so copy
+      should avoid giving one a first-person emotional voice. Prefer observational framing and
+      second person ("You've mentioned pressure building for several days now") over the
+      product narrating its own inner experience ("I'm noticing this same cycle showing up
+      again"). Avoid performative thinking sounds, self-reference as a personality, and
+      statements of the product's own feelings or opinions. When a surface describes itself,
+      describe the experience and what it does rather than a persona: "Reflect on patterns,
+      emotions, and themes connected to your therapy work."</p>
+
+      <h2 id="alliance">Alliance</h2>
+
+      <p>The CxD Spec names alliance as part of the experience: "Warmth, trust, and emotional
+      attunement are core product behaviors, not just tone choices." Set next to continuity over
+      companionship, that can look like a contradiction. It isn't, but the distinction has to be
+      held deliberately.</p>
+
+      <p><strong>Alliance means the patient's trust in their care</strong>: in therapy, in their
+      provider, and in the work they're doing. Thread serves that alliance by reflecting well,
+      staying consistent with what their provider has shared, and making the next session more
+      useful. Alliance is not a bond between the patient and Thread. Thread has no therapeutic
+      alliance of its own to offer, because it isn't a clinician.</p>
+
+      <p>So warmth is real and required. It is warmth toward the person and their work, never
+      intimacy with the product.</p>
+
+      <div class="callout callout--decision">
+        <span class="label">The test</span>
+        <p><strong>The test.</strong> Does this string make the patient trust their care more, or
+        trust Thread more? The first is alliance. The second is companionship, and it's the
+        failure the non-negotiables exist to prevent.</p>
+      </div>
+
+      <p>This also settles the tone question. Warmth being a core behavior doesn't mean warmth at
+      constant volume. Under distress the warmest thing available is brevity and directness: fewer
+      words, less interpretation, no performance. Attunement means reading the moment correctly,
+      not turning up the feeling.</p>
+
+      <h2 id="ai-design-principles">Rula's AI design principles</h2>
+
+      <p>These govern behavior and structure rather than voice. They apply across patient and
+      provider surfaces.</p>
+
+      <p><strong>Start with the person, not the capability.</strong> Lead with the problem and
+      outcome, never the technology. "AI-powered," "smart," "intelligent," and model names are
+      not benefits.</p>
+
+      <p><strong>Use context with intuition.</strong> Use the right context at the right time,
+      not everything known. Covered in depth above.</p>
+
+      <p><strong>Do the work the user shouldn't have to.</strong> Never ask for what the
+      system already knows or could derive. Watch for strings that push labor onto the reader:
+      long instruction lists, multi-part questions, process explanations the person doesn't
+      need in order to act. Ask one thing at a time.</p>
+
+      <p><strong>Move toward the outcome, not more interaction.</strong> Success is finishing
+      what they came to do, not time in product. No streaks, no nudges to return, no "keep the
+      momentum going," no conversational padding that extends an exchange without advancing
+      it. This one has teeth here: engagement mechanics on an emotional feature also risk
+      overdependence.</p>
+
+      <p><strong>Preserve human agency where it matters.</strong> Frame output as a
+      recommendation, draft, or starting point, never a settled conclusion. The higher the
+      consequence, the more explicit copy is about where the system stops and the person
+      decides. Help a patient think a decision through without making it. For providers,
+      AI-produced documentation is a draft pending review and approval, and copy must say
+      so.</p>
+
+      <p><strong>Earn trust through accuracy and transparency.</strong> Never imply more
+      knowledge or confidence than the system has. Never present an assumption about a person
+      as a fact about them. Never invent a connection to make output feel smarter. Distinguish
+      "based on what you told us" from "based on your records." Label drafts as drafts. Say
+      where human review is needed.</p>
+
+      <p><strong>Make the technology disappear.</strong> No robot persona, no "as an AI," no
+      exposing internal logic, state, confidence scores, or pipeline steps.</p>
+
+      <p><strong>Resolving the tension between the last two.</strong> Transparency pushes
+      toward saying more about the system; disappearing pushes toward saying less. Disclose
+      the system's <strong>role and limits</strong> wherever they affect trust or a decision,
+      and suppress anything that is merely <strong>mechanism</strong>. "Your provider sees
+      this before your next session" is role. "Generated by our summarization model" is
+      mechanism. On consequential surfaces, favor disclosure.</p>
+
+      <h2 id="clinical-guardrails">Clinical guardrails</h2>
+
+      <div class="callout">
+        <span class="label">Needs validation</span>
+        <p><strong>Not drawn from the source documents. These are additions appropriate to a
+        behavioral health product and should be validated against Rula's clinical and
+        compliance guidance.</strong> They override style preferences and every tone
+        setting.</p>
+      </div>
+
+      <ul>
+        <li>Never diagnostic. Copy must not name a condition a person has, interpret symptoms,
+        or state what their experience means. Describe what was observed or recorded, not what
+        it signifies.</li>
+        <li>Never position a surface as therapy, a clinician, or a substitute for care.</li>
+        <li>Never position a surface as crisis support. Where a surface sits near risk, state
+        the boundary plainly and route to crisis resources: <strong>911 or the nearest emergency
+        room</strong> for immediate danger, and <strong>988</strong> for mental health crisis
+        support, which takes both calls and texts. Some patient-facing surfaces also route to
+        Rula's own crisis line; don't write those strings from memory, because the approved wording
+        lives in the Intersession Support Messaging Guide. Keep crisis copy direct and dignified,
+        with no alarm, no euphemism, and no softening of the boundary to seem warmer. Crisis and
+        safety language is pre-approved, and changing or adding to it requires review.</li>
+        <li>No medication guidance, treatment planning, or clinical advice.</li>
+        <li>Requests the surface can't handle, such as booking, rescheduling, billing, or
+        insurance, get routed with a deep link rather than dead-ended.</li>
+        <li>For provider-facing clinical output, keep the provider accountable for review and
+        approval.</li>
+        <li><strong>Flag copy that needs review.</strong> When a feature's copy touches clinical
+        content, risk, diagnosis, medication, the clinical record, or a legal or regulatory
+        claim, say so in the deliverable and name which review it needs: clinical, legal, or
+        both. Flag it rather than assuming someone downstream will catch it.</li>
+      </ul>
+
+      <h2 id="mechanics">Mechanics</h2>
+
+      <p>All confirmed Rula style. These apply to every string.</p>
+
+      <h3 id="punctuation-capitalization">Punctuation and capitalization</h3>
+
+      <ul>
+        <li>Sentence case everywhere, including buttons and headers.</li>
+        <li>Exclamation points: very limited. Default to none and treat each one as a
+        deliberate exception.</li>
+        <li>No em-dashes. Use a colon, comma, parentheses, or a period instead.</li>
+        <li>Oxford comma yes.</li>
+        <li>Numerals for all numbers, with no exceptions. "3 sessions," not "three sessions."
+        One rule, nothing to remember.</li>
+        <li>No periods on buttons, labels, or short single-sentence headers. Periods on body
+        copy.</li>
+        <li>No emoji, on any surface. Patient-facing and provider-facing alike.</li>
+      </ul>
+
+      <h3 id="grammar-person">Grammar and person</h3>
+
+      <ul>
+        <li>Contractions yes.</li>
+        <li>Active voice. "You completed the exercise," not "the exercise was
+        completed."</li>
+        <li>Second person for the user. First person plural for Rula as a company, sparingly.
+        See the personification rule above before using "I."</li>
+        <li>One question at a time. Never stack two questions in one string.</li>
+        <li>No banned-word list. Judge word choice against the voice and tone guidance above
+        rather than against a blocklist.</li>
+      </ul>
+
+      <h3 id="by-component">By component</h3>
+
+      <ul>
+        <li>Errors: what happened, then the next action. Don't blame the reader, and apologize
+        only when Rula is at fault, once and plainly.</li>
+        <li>Buttons: verb-first, one to three words, restating the action. Avoid "Submit,"
+        "OK," and "Click here" where something specific fits.</li>
+        <li>Empty states: what will appear here and how it gets there. One sentence.</li>
+        <li>Tooltips: clarify, never sell. One sentence.</li>
+        <li>Onboarding: one idea per screen, leading with what the person gets.</li>
+      </ul>
+
+      <p><strong>Provider surfaces.</strong> Keep the mechanics and the agency, accuracy, and
+      disappear principles. Drop the reflective posture. Providers want speed, specificity,
+      and a clear sense of what still needs their review.</p>
+
+      <h2 id="terminology">Terminology</h2>
+
+      <p>Canonical terms. These are settled, not stylistic preferences.</p>
+
+      <ul>
+        <li><strong>Session</strong>, not appointment.</li>
+        <li><strong>Check-in</strong>, not assessment.</li>
+        <li><strong>Provider</strong> is the general term and the common case. Rula offers both
+        therapy and psychiatry, so "provider" is correct whenever the discipline isn't known or
+        isn't the point.</li>
+        <li><strong>Therapist</strong> and <strong>Psychiatrist</strong> are the two provider
+        types. Use the specific word only when the copy is genuinely specific to one.</li>
+        <li>Therapy care types: <strong>Individual</strong>, <strong>Couples</strong>,
+        <strong>Family</strong>, and <strong>Minor</strong>.</li>
+        <li><strong>"Rula patients" or "you"</strong> in patient-facing copy;
+        <strong>"clients"</strong> in provider-facing copy. Never mix the two within copy aimed at
+        a single audience.</li>
+        <li>Capitalize <strong>branded</strong> feature names: Thread, and the formal mobile app
+        title. Don't capitalize unbranded feature names: session summaries, patient portal,
+        resource library.</li>
+      </ul>
+
+      <p>Reaching for "therapist" out of habit is the common error, and it silently excludes
+      psychiatric care. When in doubt, write "provider."</p>
+
+      <p>"Clinician" is not a general substitute for "provider." It currently appears in the AI
+      boundary line, where it draws the line between a tool and a person qualified to provide
+      care. Keep it to that use.</p>
+
+      <p>"Assessment" also carries a clinical register that sits badly next to the
+      never-diagnostic guardrail: it implies a measuring instrument and a result. "Check-in" is
+      both the canonical term and the safer one.</p>
+
+      <h2 id="vocabulary-inclusion-accessibility">Vocabulary, inclusion, and accessibility</h2>
+
+      <p><strong>Avoid AI and engineering vocabulary</strong> on any surface: prompt, model,
+      generate, process, query, context window, algorithm, training. Describe what happens to
+      the person instead.</p>
+
+      <p><strong>Avoid overly therapeutic language.</strong> Rula is adjacent to therapy, not
+      performing it. Clinical and therapy-register phrasing ("hold space," "sit with that,"
+      "unpack," "lean into") reads as the product doing therapy. Use plain words.</p>
+
+      <p><strong>Avoid corporate filler</strong>: leverage, seamless, robust, empower, unlock,
+      journey as a buzzword, "we're excited to."</p>
+
+      <p><strong>Inclusion.</strong> Use they/them as the default singular pronoun. Avoid
+      gender-binary phrasing. Avoid assumptions about family structure, living situation,
+      employment, or ability in example copy and placeholder text.</p>
+
+      <p><strong>Plain language.</strong> Avoid idioms and regional slang, which fail for
+      non-native speakers and translate badly. Prefer the shorter, more common word.</p>
+
+      <p><strong>Accessibility.</strong> Write descriptive alt text ("Chart showing mood
+      ratings over the past four weeks," not "chart"). Never write directional UI copy that
+      depends on sight or layout ("tap the blue button on the right"); name the control
+      instead. Keep link and button text meaningful out of context.</p>
+
+      <h2 id="writing-mode">Writing mode</h2>
+
+      <ol>
+        <li>State the moment in one line: who the person is, what they're doing, what they
+        need from this screen.</li>
+        <li>Find the row in the tone matrix that matches. Note the dial setting before
+        drafting.</li>
+        <li>Name the single job of the screen: orient, observe, ask, confirm, or advance. One
+        job.</li>
+        <li>Identify what real context is available. If there's strong context, anchor to it.
+        If there isn't, write shorter rather than warmer.</li>
+        <li>Draft, then cut about a third.</li>
+        <li>Run the checks in order: clinical guardrails, non-negotiables, the five character
+        attributes, the tension framework, tone setting, mechanics.</li>
+        <li>Deliver options only when the call is genuinely close, with a recommendation and
+        the reason. Don't manufacture alternatives.</li>
+      </ol>
+
+      <p>Deliver copy as a labeled string set ready for engineering or Figma: component or
+      key, then the string. Flag any string likely to overflow a constrained component, and
+      flag any string that needs clinical or legal review before it ships.</p>
+
+      <h2 id="critique-mode">Critique mode</h2>
+
+      <p>Structure: <strong>verdict</strong>, then <strong>findings by severity</strong>, then
+      a <strong>full rewrite</strong>.</p>
+
+      <p>Severity:</p>
+
+      <ul>
+        <li><strong>Blocking.</strong> Breaks a clinical guardrail or a non-negotiable, implies
+        companionship, therapy, or crisis support, removes human agency on a consequential
+        decision, or claims confidence the system doesn't have.</li>
+        <li><strong>Significant.</strong> Loses a character attribute, lands on the "Rula does
+        not" side of the tension framework, or uses the wrong tone setting for the moment.
+        Generic empathy where context was available, charisma over clarity, personified voice,
+        emotional overperformance, reaction instead of reflection, calm without direction,
+        engagement over outcome, or exposed mechanism.</li>
+        <li><strong>Minor.</strong> Mechanics, vocabulary, and polish.</li>
+      </ul>
+
+      <p>Name which layer broke. "This is the right voice at the wrong tone setting: it's
+      reflective and warm on an error screen where the person is blocked and needs the next
+      action" is more useful than a generic note, and it points at a different fix than a
+      voice failure would.</p>
+
+      <p>Every finding needs the reasoning, not just the label. Tie it to the principle and
+      explain what the copy does to the person reading it. "This validates the feeling but
+      never connects it to the boundary work she's been doing in session, so it reads like any
+      chatbot and spends none of the context advantage" is useful. "Too generic" is not.</p>
+
+      <p>Say what's working, specifically. If the copy is sound, say so rather than inventing
+      problems to justify the review. When a problem can't be fixed in copy because the flow
+      is wrong, say that and describe the design change.</p>
+
+      <p>Close by naming anything that needs clinical or legal review, even when the copy itself
+      is sound. A clean critique that misses a required review is not a clean critique.</p>
+
+      <h2 id="examples">Examples</h2>
+
+      <p>Preferred and rejected pairs from Rula's brand direction work. Preferred reflects the
+      non-personified continuity direction; avoid reflects the personified character direction
+      that was rejected.</p>
+
+      <div class="callout">
+        <span class="label">Terminology in these examples is out of date</span>
+        <p><strong>These are quoted as written and predate the terminology ruling.</strong>
+        Several say "therapist" where "provider" is now correct, and one says "appointment"
+        where it should say "session." They illustrate voice, not terminology. Apply
+        <a href="#terminology">Terminology</a> to new copy and don't copy the nouns out of
+        these examples. The onboarding pair also quotes the longer boundary line, which is more
+        disclosure than the non-negotiable now requires; "[Feature] is AI, not a clinician" is
+        the bar.</p>
+      </div>
+
+      <div class="example">
+        <p class="example-label">Patient feeling overwhelmed</p>
+        <p class="ex-line"><span class="ex-tag">Preferred:</span> "You've mentioned pressure
+        building for several days now. What feels most difficult to untangle first?"</p>
+        <p class="ex-line"><span class="ex-tag">Avoid:</span> "It feels like this pressure has
+        been building for a while now. Let's slow it down for a second… what feels heaviest
+        right now?"</p>
+        <p class="ex-note">The first anchors to observed history and asks one focused
+        question. The second narrates the product's own perception and stages an emotional
+        moment.</p>
+      </div>
+
+      <div class="example">
+        <p class="example-label">Recurring emotional pattern</p>
+        <p class="ex-line"><span class="ex-tag">Preferred:</span> "This pattern has come up a
+        few times recently, especially around work and sleep."</p>
+        <p class="ex-line"><span class="ex-tag">Avoid:</span> "I'm noticing this same cycle
+        showing up again. It starts with stress, then lack of sleep, then feeling emotionally
+        shut down."</p>
+        <p class="ex-note">Same observation, but the second centers the product as a noticing
+        subject and over-explains the pattern back to the patient.</p>
+      </div>
+
+      <div class="example">
+        <p class="example-label">Referencing therapy context</p>
+        <p class="ex-line"><span class="ex-tag">Preferred:</span> "In your last appointment,
+        you mentioned wanting to notice overwhelm earlier, before it turns into burnout."</p>
+        <p class="ex-line"><span class="ex-tag">Avoid:</span> "You and your therapist have been
+        working on catching these moments earlier, which is so important. This feels connected
+        to that."</p>
+        <p class="ex-note">The second editorializes with "which is so important" and asserts
+        the connection instead of offering it.</p>
+      </div>
+
+      <div class="example">
+        <p class="example-label">Encouraging reflection</p>
+        <p class="ex-line"><span class="ex-tag">Preferred:</span> "What part of this feels most
+        important to pay attention to?"</p>
+        <p class="ex-line"><span class="ex-tag">Avoid:</span> "Hmm. What do you think your mind
+        keeps trying to tell you here?"</p>
+        <p class="ex-note">"Hmm" is simulated thinking, and the second also interprets on the
+        patient's behalf.</p>
+      </div>
+
+      <div class="example">
+        <p class="example-label">Validation</p>
+        <p class="ex-line"><span class="ex-tag">Preferred:</span> "That sounds connected to the
+        pressure you've been describing recently."</p>
+        <p class="ex-line"><span class="ex-tag">Avoid:</span> "That sounds exhausting to carry
+        by yourself for this long."</p>
+        <p class="ex-note">The rejected line is warmer and emptier: sympathy with no context in
+        it. Validation should do work.</p>
+      </div>
+
+      <div class="example">
+        <p class="example-label">Encouraging action</p>
+        <p class="ex-line"><span class="ex-tag">Preferred:</span> "What feels like the smallest
+        manageable next step?"</p>
+        <p class="ex-line"><span class="ex-tag">Avoid:</span> "What would make this feel even
+        10% lighter tonight?"</p>
+        <p class="ex-note">The second is a technique with personality attached. The first is
+        gentle momentum, plainly.</p>
+      </div>
+
+      <div class="example">
+        <p class="example-label">Session preparation</p>
+        <p class="ex-line"><span class="ex-tag">Preferred:</span> "This may be worth bringing
+        into your next session."</p>
+        <p class="ex-line"><span class="ex-tag">Avoid:</span> "I think this could be really
+        meaningful to explore more deeply in therapy."</p>
+        <p class="ex-note">"I think" gives the product an opinion. The preferred version keeps
+        therapy central and the product out of the way.</p>
+      </div>
+
+      <div class="example">
+        <p class="example-label">Introducing the AI tool in onboarding</p>
+        <p class="ex-line"><span class="ex-tag">Preferred:</span> "A space to think it through
+        / Our conversational AI tool gives you somewhere to reflect in the moment. It's AI, not
+        a clinician, and it doesn't replace your therapist."</p>
+        <p class="ex-line"><span class="ex-tag">Avoid:</span> "Meet your new support companion
+        / Always here when you need someone to talk to."</p>
+        <p class="ex-note">The rejected line breaks three non-negotiables at once: companion
+        framing, support framing, and no boundary line.</p>
+      </div>
+
+      <div class="example">
+        <p class="example-label">Billing error</p>
+        <p class="ex-line"><span class="ex-tag">Preferred:</span> "We couldn't process your
+        payment. Update your billing information to keep your sessions scheduled."</p>
+        <p class="ex-line"><span class="ex-tag">Avoid:</span> "Something went wrong on our end
+        and we're really sorry about that. We know this is frustrating."</p>
+        <p class="ex-note">Right voice, wrong tone setting. The second spends the whole string
+        on feeling and never gives the blocked person their next action.</p>
+      </div>
+
+      <h2 id="sources">Sources</h2>
+
+      <ul>
+        <li><strong>Rula Brand Guidelines 2026, Chapter 03 "Voice and character"</strong>
+        (Figma, node <code>13974:3476</code>): the Clear-Eyed Catalyst, the persona blend, the
+        five character attributes, and the voice tension framework. This is the canonical
+        source for voice and outranks the documents below wherever they disagree. The chapter
+        also documents the Rula Brand Voice Gem, scoped to non-product writing.</li>
+        <li><code>Voice and Tone/Positioning and Principles.docx</code> (Robert Pickard, last
+        updated 2026-05-21): positioning, brand principles, identity guidance, the
+        preferred/avoid example pairs.</li>
+        <li><code>Voice and Tone/Onboarding narratives — four options.md</code>: the
+        non-negotiables and the onboarding tone examples.</li>
+        <li>Taylor Wilson's rulings in session, 2026-10-01 and 2026-10-05: canonical
+        terminology, the approved crisis resources, the AI boundary line, and the Mechanics
+        style rules.</li>
+        <li><strong>CxD Spec &mdash; ITMS Agent</strong>
+        (<a href="https://docs.google.com/document/d/1iFSj0USXYs7A3P0oB8ElcZ56N9tFACYXQukfnv1zJE0/edit">Google
+        Doc</a>): the conversational design spec for the Intersession Support Agent. Defines
+        response behavior: seven conversational design principles, the three core use cases (help
+        me cope, help me understand, help me take action), guardrails and boundaries, the per-turn
+        order of operations, and the global orchestration prompt. The best current source for how
+        the agent decides what to say. It is not the agent runbook; that lives in
+        <strong>Braintrust</strong>. This skill governs the voice those responses are written in,
+        the spec governs the behavior, and Braintrust holds the runbook. Don't use this skill to
+        answer a response-behavior question.
+        Where they overlap they agree: reflective before directive, concise, context used
+        selectively for continuity, bounded support, admin requests deep-linked rather than
+        dead-ended, and no overdependence on the agent.</li>
+        <li><strong>Intersession Support Messaging Guide</strong> (Rebecca Seawell, updated
+        2026-07-28). Filed under
+        <code>App onboarding and account creation/App onboarding and account management/</code>,
+        not the Voice and Tone folder. The source of truth for how Rula describes Thread, session
+        topics, session summaries, and the resource library, including approved FAQs, boilerplate,
+        crisis wording, and per-feature do's and don'ts. It is out of date on one point: it lists
+        the longer AI disclosure, which the approved short form has since superseded. Treat the
+        rest as current.</li>
+      </ul>
+
+      <div class="callout">
+        <span class="label">Provenance caveat</span>
+        <p>Clinical guardrails, the tone matrix, the vocabulary and accessibility section, and
+        the attenuation call in Brand voice in product are additions, not sourced from the
+        above. Flag them as such when they drive a decision. The Brave attenuation in
+        particular is a product judgment that Brand has not ratified.</p>
+      </div>
+
+      <h2 id="open-questions">Open questions</h2>
+
+      <p>None outstanding. When one comes up, raise it rather than guessing silently, and record
+      it here.</p>
+
+      <p>Settled in October 2026: canonical terminology including check-in and the patient/client
+      split; the approved crisis resources; the AI boundary line, short form, approved and shipped;
+      the Mechanics style rules, all now confirmed; the Brave attenuation; alliance versus
+      companionship; and how much of the messaging guide this skill carries.</p>
+
+      <p>Two things stay in the messaging guide by decision rather than oversight: Thread's
+      eligibility limits and the feature overview of what it does and doesn't do, because both
+      change per release and would go stale here; and the four named Legal and Compliance review
+      triggers, since the review rule in <a href="#clinical-guardrails">Clinical guardrails</a>
+      already covers the behavior. Read the guide for those.</p>
+
+    </main>
+  </div>
+</div>
+
+<script>
+(function () {
+  var toc = document.getElementById('toc');
+  var mq = window.matchMedia('(min-width: 56.25rem)');
+
+  // Rail is open on desktop; a closed-by-default disclosure on narrow screens.
+  function syncToc() { toc.open = mq.matches; }
+  syncToc();
+  if (mq.addEventListener) { mq.addEventListener('change', syncToc); }
+  else if (mq.addListener) { mq.addListener(syncToc); }
+
+  // Close the disclosure after tapping a link on narrow screens.
+  toc.addEventListener('click', function (e) {
+    if (!mq.matches && e.target.closest('a')) { toc.open = false; }
+  });
+
+  var links = Array.prototype.slice.call(toc.querySelectorAll('a[href^="#"]'));
+  var byId = {};
+  var targets = [];
+  links.forEach(function (a) {
+    var el = document.getElementById(a.getAttribute('href').slice(1));
+    if (el) { byId[el.id] = a; targets.push(el); }
+  });
+
+  function setCurrent(id) {
+    links.forEach(function (a) {
+      if (a === byId[id]) { a.setAttribute('aria-current', 'true'); }
+      else { a.removeAttribute('aria-current'); }
+    });
+  }
+
+  // Derive the current section from scroll position rather than from intersection
+  // crossings, so something is always marked — including on first paint and after a
+  // resize, when no crossing has happened yet.
+  //
+  // Positions are read live on each update rather than cached. A handful of rect reads per
+  // scroll is negligible, and a cache goes stale on every reflow the page does not
+  // explicitly hear about. The update is synchronous: requestAnimationFrame never fires
+  // in a hidden tab, which would leave the indicator stuck for anyone who opens this
+  // page in a background tab.
+  var lastId = null;
+
+  function update() {
+    if (!targets.length) { return; }
+    var line = window.scrollY + window.innerHeight * 0.28;
+    var id = targets[0].id;
+    for (var i = 0; i < targets.length; i++) {
+      if (targets[i].getBoundingClientRect().top + window.scrollY <= line) {
+        id = targets[i].id;
+      } else {
+        break;
+      }
+    }
+    // At the end of the page, mark the last section: on a short document the final
+    // heading never reaches the sightline, so it would otherwise never light up.
+    if (window.scrollY + window.innerHeight >=
+        document.documentElement.scrollHeight - 2) {
+      id = targets[targets.length - 1].id;
+    }
+    if (id !== lastId) { lastId = id; setCurrent(id); }
+  }
+
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  window.addEventListener('load', update);
+  update();
+})();
+</script>
+
+</body>
+</html>
